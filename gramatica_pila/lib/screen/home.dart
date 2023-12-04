@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:gramatica_pila/logic/automata.dart';
 import 'package:gramatica_pila/logic/lenguage.dart';
@@ -107,6 +105,33 @@ class _HomeState extends State<Home> {
                     style: TextStyle(color: Colors.black, fontSize: 18),
                   ),
                 const SizedBox(height: 20),
+                const Text(
+                  'Historial:',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+                if (result != null && result?.statesHistory != null)
+                  for (var token in result!.statesHistory.reversed)
+                    Text(
+                      token != null ? token.tipo.toString() : 'null',
+                      style: const TextStyle(color: Colors.black, fontSize: 16),
+                    ),
+                const Text(
+                  'Contenido de la Pila:',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (result != null && result?.finalPila != null)
+                  for (var token in result!.finalPila!.items.reversed)
+                    Text(
+                      token != null ? token.tipo.toString() : 'null',
+                      style: const TextStyle(color: Colors.black, fontSize: 16),
+                    ),
                 ElevatedButton(
                   onPressed: validateCode,
                   child: const Text('Validar'),

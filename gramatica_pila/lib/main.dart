@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gramatica_pila/logic/pila.dart';
 import 'package:gramatica_pila/screen/home.dart';
 
 void main() {
