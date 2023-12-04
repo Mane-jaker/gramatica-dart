@@ -1,101 +1,116 @@
+import 'package:gramatica_pila/logic/pila.dart';
+
 class Lenguage {
-  late RegExp regexInt;
-  late RegExp regexBool;
-  late RegExp regexStr;
-  late RegExp regexChar;
-  late RegExp regexVar;
-  late RegExp regexIf;
-  late RegExp regexElse;
-  late RegExp regexEnd;
-  late RegExp regexFor;
-  late RegExp regexFunction;
+  late RegExp regexVT;
+  late RegExp regexV;
+  late RegExp regexE;
+  late RegExp regexSTR;
+  late RegExp regexINT;
+  late RegExp regexBOOL;
+  late RegExp regexCHAR;
+  late RegExp regexIF;
+  late RegExp regexAP;
+  late RegExp regexCP;
+  late RegExp regexCOND;
+  late RegExp regexAF;
+  late RegExp regexCF;
+  late RegExp regexFOR;
+  late RegExp regexCIC;
 
   Lenguage() {
-    regexInt = RegExp(r'int\s+[a-z][a-z0-9_]*\s*(=\s*-?\d+)?');
-    regexBool = RegExp(r'bool\s+[a-z][a-z0-9_]*\s*(=\s*(T|F))?');
-    regexStr = RegExp(r'str\s+[a-z][a-z0-9_]*\s*(=\s*"([a-z]+)")?');
-    regexChar = RegExp(r'char\s+[a-z][a-z0-9_]*\s*(=\s*"([a-z])")?');
-
-    regexVar = RegExp(
-        '(${regexBool.pattern})|(${regexStr.pattern})|(${regexChar.pattern})|(${regexInt.pattern})');
-
-    regexIf = RegExp(
-        r'if\(((([a-z][a-z0-9_]*)|(-?\d+))\s*((<|>)|==|!=)\s*(([a-z][a-z0-9_]*)|(-?\d+)))|((([a-z][a-z0-9_]*)|("([a-z]+)")|(T|F))\s*(==|!=)\s*(([a-z][a-z0-9_]*)|("([a-z]+)")|(T|F)))\)->');
-    regexElse = RegExp(r'<-(else->)?');
-    regexFor = RegExp(r'for\((\w+) = (-?\d+) ; \1 to (-?\d+)\)->');
-    regexFunction = RegExp(
-        r'(int|bool|str|char|void)\s+[a-z][a-z0-9_]*\s*\((?:\s*(${regexVar.pattern})\s*(?:,\s*${regexVar.pattern})*\s*)?\)->');
-    regexEnd = RegExp(r'<-');
+    regexVT = RegExp(r'(int|bool|str|char|void)');
+    regexV = RegExp(r'\b([a-z][a-z0-9_]*)\b');
+    regexE = RegExp(r'=');
+    regexSTR = RegExp(r'\s*"([^"]*)"\s*');
+    regexINT = RegExp(r'-?\d+');
+    regexBOOL = RegExp(r'[TF]');
+    regexCHAR = RegExp(r'"(.)"');
+    regexIF = RegExp(r'if');
+    regexAP = RegExp(r'\(');
+    regexCP = RegExp(r'\)');
+    regexCOND = RegExp(
+        r'((([a-z][a-z0-9_]*)|(-?\d+))\s*((<|>)|==|!=)\s*(([a-z][a-z0-9_]*)|(-?\d+)))|((([a-z][a-z0-9_]*)|("([a-z]+)")|(T|F))\s*(==|!=)\s*(([a-z][a-z0-9_]*)|("([a-z]+)")|(T|F)))');
+    regexAF = RegExp(r'->');
+    regexCF = RegExp(r'<-');
+    regexFOR = RegExp(r'for');
+    regexCIC = RegExp(r'(\w+)\s*=\s*(-?\d+)\s*;\s*\1\s*to\s*(-?\d+)');
   }
 
-  Map<int, bool> evaluar(String code) {
-    final lines = code.split('\n');
-    final result = <int, bool>{};
-    int ifBlocks = 0;
-    int forBlocks = 0;
-    int functionBlocks = 0;
+  Pila llenarPila(String code) {
+    // Inicializar la pila
+    Pila pila = Pila();
 
-    for (int i = 0; i < lines.length; i++) {
-      final matchVar = regexVar.firstMatch(lines[i]);
-      final matchIf = regexIf.firstMatch(lines[i]);
-      final matchElse = regexElse.firstMatch(lines[i]);
-      final matchEnd = regexEnd.firstMatch(lines[i]);
-      final matchFor = regexFor.firstMatch(lines[i]);
-      final matchFunction = regexFunction.firstMatch(lines[i]);
+    pila.push(Token(TokenType.$, ''));
 
-      if (matchVar != null) {
-        result[i] = true; // Declaración de variables
-      } else if (matchIf != null) {
-        ifBlocks++;
-        if (ifBlocks == 0) {
-          result[i] = true;
-        }
-      } else if (matchElse != null) {
-        if (ifBlocks > 0 || forBlocks > 0 || functionBlocks > 0) {
-          result[i] = true;
-        } else {
-          print('Error en la línea ${i + 1}: Falta If, For o Function');
-          result[i] = false;
-        }
-      } else if (matchEnd != null) {
-        if (ifBlocks > 0 || forBlocks > 0 || functionBlocks > 0) {
-          // Similar al manejo de bloques de If y For
-          if (ifBlocks > 0) {
-            ifBlocks--;
-          } else if (forBlocks > 0) {
-            forBlocks--;
-          } else {
-            functionBlocks--;
-          }
-          result[i] = true; // Fin de bloque
-        } else {
-          print('Error en la línea ${i + 1}: Falta If, For o Function');
-          result[i] = false;
-        }
-      } else if (matchFor != null) {
-        forBlocks++;
-        if (forBlocks == 0) {
-          result[i] = true;
-        }
-      } else if (matchFunction != null) {
-        functionBlocks++;
-        if (functionBlocks == 0) {
-          result[i] = true;
-        }
+    // Analizar la cadena y agregar tokens a la pila
+    while (code.isNotEmpty) {
+      if (regexVT.hasMatch(code)) {
+        var match = regexVT.firstMatch(code)!;
+        pila.push(Token(TokenType.VT, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexFOR.hasMatch(code)) {
+        var match = regexFOR.firstMatch(code)!;
+        pila.push(Token(TokenType.FOR, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexIF.hasMatch(code)) {
+        var match = regexIF.firstMatch(code)!;
+        pila.push(Token(TokenType.IF, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexAP.hasMatch(code)) {
+        var match = regexAP.firstMatch(code)!;
+        pila.push(Token(TokenType.AP, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexCOND.hasMatch(code)) {
+        var match = regexCOND.firstMatch(code)!;
+        pila.push(Token(TokenType.COND, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexCIC.hasMatch(code)) {
+        var match = regexCIC.firstMatch(code)!;
+        pila.push(Token(TokenType.CIC, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexV.hasMatch(code)) {
+        var match = regexV.firstMatch(code)!;
+        pila.push(Token(TokenType.V, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexE.hasMatch(code)) {
+        var match = regexE.firstMatch(code)!;
+        pila.push(Token(TokenType.E, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexSTR.hasMatch(code)) {
+        var match = regexSTR.firstMatch(code)!;
+        pila.push(Token(TokenType.STR, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexINT.hasMatch(code)) {
+        var match = regexINT.firstMatch(code)!;
+        pila.push(Token(TokenType.INT, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexBOOL.hasMatch(code)) {
+        var match = regexBOOL.firstMatch(code)!;
+        pila.push(Token(TokenType.BOOL, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexCHAR.hasMatch(code)) {
+        var match = regexCHAR.firstMatch(code)!;
+        pila.push(Token(TokenType.CHAR, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexCP.hasMatch(code)) {
+        var match = regexCP.firstMatch(code)!;
+        pila.push(Token(TokenType.CP, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexAF.hasMatch(code)) {
+        var match = regexAF.firstMatch(code)!;
+        pila.push(Token(TokenType.AF, match.group(0)!));
+        code = code.substring(match.end);
+      } else if (regexCF.hasMatch(code)) {
+        var match = regexCF.firstMatch(code)!;
+        pila.push(Token(TokenType.CF, match.group(0)!));
+        code = code.substring(match.end);
       } else {
-        result[i] = false; // Error en la línea
+        pila.push(Token(TokenType.ERR, code[0]));
+        code = code.substring(1);
       }
     }
 
-    // Verifica si hay bloques de For, If o Function sin cerrar al final del código
-    if ((forBlocks > 0 || ifBlocks > 0 || functionBlocks > 0) &&
-        !code.endsWith('<-')) {
-      print(
-          'Error: Hay bloques de For, If o Function sin cerrar al final del código.');
-      return result
-          .map((key, value) => MapEntry(key, value && key != lines.length - 1));
-    }
-
-    return result;
+    // Retornar la pila
+    return pila;
   }
 }

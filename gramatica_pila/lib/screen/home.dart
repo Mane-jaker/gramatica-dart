@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:gramatica_pila/logic/automata.dart';
 import 'package:gramatica_pila/logic/lenguage.dart';
+import 'package:gramatica_pila/logic/pila.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -10,7 +14,6 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _textEditingController = TextEditingController();
-  Map<int, bool>? lineValidationResults;
   bool _isButtonPressed = false;
 
   @override
@@ -22,7 +25,10 @@ class _HomeState extends State<Home> {
   void validateCode() {
     final String code = _textEditingController.text;
     setState(() {
-      lineValidationResults = Lenguage().evaluar(code);
+      Pila pila = Lenguage().llenarPila(code);
+      ProcessResult result = Automata().processPila(pila);
+      print(result.acceptedState);
+      print(result.currentState);
       _isButtonPressed = true;
     });
   }
@@ -80,27 +86,9 @@ class _HomeState extends State<Home> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 if (_isButtonPressed)
-                  Text(
-                    lineValidationResults!.values.every((result) => result)
-                        ? 'Es correcto'
-                        : 'Es incorrecto',
-                    style: TextStyle(
-                        color: lineValidationResults!.values
-                                .every((result) => result)
-                            ? Colors.green
-                            : Colors.red,
-                        fontSize: 18),
-                  ),
-                if (_isButtonPressed && lineValidationResults != null)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Text(
-                        'Líneas inválidas: ${getInvalidLines(lineValidationResults!)}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ],
+                  const Text(
+                    'Es correcto',
+                    style: TextStyle(color: Colors.green, fontSize: 18),
                   ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -113,17 +101,5 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
-  }
-
-  String getInvalidLines(Map<int, bool>? results) {
-    List<int> invalidLines = [];
-    if (results != null) {
-      for (int line = 1; line <= results.length; line++) {
-        if (results[line] == false) {
-          invalidLines.add(line + 1);
-        }
-      }
-    }
-    return invalidLines.join(', ');
   }
 }
