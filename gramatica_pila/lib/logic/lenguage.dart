@@ -19,9 +19,9 @@ class Lenguage {
 
   Lenguage() {
     regexVT = RegExp(r'(int|bool|str|char|void)');
-    regexV = RegExp(r'\b([a-z][a-z0-9_]*)\b');
+    regexV = RegExp(r'(?:^|[\s])\b([a-z][a-z0-9_]*)\b');
     regexE = RegExp(r'=');
-    regexSTR = RegExp(r'\s*"([^"]*)"\s*');
+    regexSTR = RegExp(r'".*?"');
     regexINT = RegExp(r'-?\d+');
     regexBOOL = RegExp(r'[TF]');
     regexCHAR = RegExp(r'"(.)"');
@@ -47,6 +47,7 @@ class Lenguage {
       if (regexVT.hasMatch(code)) {
         var match = regexVT.firstMatch(code)!;
         pila.push(Token(TokenType.VT, match.group(0)!));
+
         code = code.substring(match.end);
       } else if (regexFOR.hasMatch(code)) {
         var match = regexFOR.firstMatch(code)!;
@@ -71,10 +72,12 @@ class Lenguage {
       } else if (regexV.hasMatch(code)) {
         var match = regexV.firstMatch(code)!;
         pila.push(Token(TokenType.V, match.group(0)!));
+
         code = code.substring(match.end);
       } else if (regexE.hasMatch(code)) {
         var match = regexE.firstMatch(code)!;
         pila.push(Token(TokenType.E, match.group(0)!));
+
         code = code.substring(match.end);
       } else if (regexSTR.hasMatch(code)) {
         var match = regexSTR.firstMatch(code)!;

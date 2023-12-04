@@ -16,6 +16,8 @@ class _HomeState extends State<Home> {
   final TextEditingController _textEditingController = TextEditingController();
   bool _isButtonPressed = false;
 
+  ProcessResult? result;
+
   @override
   void dispose() {
     _textEditingController.dispose();
@@ -26,11 +28,25 @@ class _HomeState extends State<Home> {
     final String code = _textEditingController.text;
     setState(() {
       Pila pila = Lenguage().llenarPila(code);
-      ProcessResult result = Automata().processPila(pila);
-      print(result.acceptedState);
-      print(result.currentState);
+      result = Automata().processPila(pila);
       _isButtonPressed = true;
     });
+  }
+
+  String evaluateState(String? state) {
+    switch (state) {
+      case 'q4':
+      case 'q8':
+      case 'q12':
+      case 'q16':
+      case 'q18':
+      case 'q24':
+      case 'q27':
+      case 'q30':
+        return 'valido';
+      default:
+        return 'error';
+    }
   }
 
   @override
@@ -86,9 +102,9 @@ class _HomeState extends State<Home> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 if (_isButtonPressed)
-                  const Text(
-                    'Es correcto',
-                    style: TextStyle(color: Colors.green, fontSize: 18),
+                  Text(
+                    evaluateState(result!.currentState),
+                    style: TextStyle(color: Colors.black, fontSize: 18),
                   ),
                 const SizedBox(height: 20),
                 ElevatedButton(

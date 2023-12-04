@@ -4,13 +4,24 @@ class ProcessResult {
   final String? acceptedState;
   final String currentState;
   final List<Token?> statesHistory;
+  final Pila? finalPila;
 
-  ProcessResult(this.acceptedState, this.currentState, this.statesHistory);
+  ProcessResult(this.acceptedState, this.currentState, this.statesHistory,
+      this.finalPila);
 }
 
 class Automata {
   static const String initialState = 'q0';
-  static const String acceptState = 'q4';
+  static const List acceptState = [
+    'q4',
+    'q8',
+    'q12',
+    'q16',
+    'q18',
+    'q24',
+    'q27',
+    'q30'
+  ];
   static const String errorState = 'qe';
 
   final Map<String, Map<TokenType, String>> transitions = {
@@ -45,6 +56,7 @@ class Automata {
     'q21': {
       TokenType.COND: 'q22',
       TokenType.CIC: 'q25',
+      TokenType.V: 'q28',
     },
     'q22': {TokenType.AP: 'q23'},
     'q23': {TokenType.IF: 'q24'},
@@ -52,15 +64,19 @@ class Automata {
     'q25': {TokenType.AP: 'q26'},
     'q26': {TokenType.FOR: 'q27'},
     'q27': {},
+    'q28': {TokenType.VT: 'q29'},
+    'q29': {TokenType.VT: 'q30'},
+    'q30': {},
     errorState: {},
   };
-
   ProcessResult processPila(Pila pila) {
     String currentState = initialState;
+    List<Token?> statesHistory = [];
 
     while (pila.isNotEmpty) {
       print(pila.tokenTypes);
       final lastToken = pila.pop();
+      statesHistory.add(lastToken);
 
       print(lastToken.tipo);
 
@@ -68,19 +84,19 @@ class Automata {
           transitions[currentState]!.containsKey(lastToken.tipo)) {
         currentState = transitions[currentState]![lastToken.tipo]!;
 
-        if (currentState == acceptState) {
+        if (acceptState.contains(currentState)) {
           break; // Aceptamos el estado y terminamos la lectura
         }
       } else {
-        currentState = errorState;
         break;
       }
     }
 
     return ProcessResult(
-      currentState == acceptState ? currentState : null,
+      acceptState.contains(currentState) ? currentState : null,
       currentState,
-      [],
+      statesHistory,
+      pila,
     );
   }
 }
